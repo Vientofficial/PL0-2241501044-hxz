@@ -1,0 +1,19 @@
+const n=10;
+var i,sum;
+procedure example;
+begin
+  i:=1;
+  sum:=0;
+  while i<=n do
+    begin
+      sum:=sum+i;
+      i:=i+1
+    end;
+  if sum=55 then
+    begin
+      i:=sum
+    end
+end;
+begin
+  call example
+end.
