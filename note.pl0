@@ -1,0 +1,16 @@
+// note test
+var j; // new var
+/*
+  procedure name: test
+  function: 1 -> j
+*/
+procedure test;
+begin
+  // set j = 1
+  j:=1;
+  write j;
+end;
+
+begin
+  call test
+end.
