@@ -1,7 +1,6 @@
 // pl0 compiler source code
 
-#pragma warning(disable:4996)
-
+// #pragma warning(disable:4996)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +24,7 @@ void error(int n)
 	err++;
 } // error
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void getch(void)
 {
 	if (cc == ll)
@@ -38,7 +37,7 @@ void getch(void)
 		ll = cc = 0;
 		printf("%5d  ", cx);
 		while ((!feof(infile)) // added & modified by alex 01-02-09
-			&& ((ch = getc(infile)) != '\n'))
+			   && ((ch = getc(infile)) != '\n'))
 		{
 			printf("%c", ch);
 			line[++ll] = ch;
@@ -49,8 +48,8 @@ void getch(void)
 	ch = line[++cc];
 } // getch
 
-  //////////////////////////////////////////////////////////////////////
-  // gets a symbol from input stream.
+//////////////////////////////////////////////////////////////////////
+// gets a symbol from input stream.
 void getsym(void)
 {
 	int i, k;
@@ -72,11 +71,12 @@ void getsym(void)
 		strcpy(id, a);
 		word[0] = id;
 		i = NRW;
-		while (strcmp(id, word[i--]));
+		while (strcmp(id, word[i--]))
+			;
 		if (++i)
 			sym = wsym[i]; // symbol is a reserved word
 		else
-			sym = SYM_IDENTIFIER;   // symbol is an identifier
+			sym = SYM_IDENTIFIER; // symbol is an identifier
 	}
 	else if (isdigit(ch))
 	{ // symbol is a number.
@@ -89,7 +89,7 @@ void getsym(void)
 			getch();
 		} while (isdigit(ch));
 		if (k > MAXNUMLEN)
-			error(25);     // The number is too great.
+			error(25); // The number is too great.
 	}
 	else if (ch == ':')
 	{
@@ -101,7 +101,7 @@ void getsym(void)
 		}
 		else
 		{
-			sym = SYM_NULL;       // illegal?
+			sym = SYM_NULL; // illegal?
 		}
 	}
 	else if (ch == '>')
@@ -109,12 +109,12 @@ void getsym(void)
 		getch();
 		if (ch == '=')
 		{
-			sym = SYM_GEQ;     // >=
+			sym = SYM_GEQ; // >=
 			getch();
 		}
 		else
 		{
-			sym = SYM_GTR;     // >
+			sym = SYM_GTR; // >
 		}
 	}
 	else if (ch == '<')
@@ -122,19 +122,58 @@ void getsym(void)
 		getch();
 		if (ch == '=')
 		{
-			sym = SYM_LEQ;     // <=
+			sym = SYM_LEQ; // <=
 			getch();
 		}
 		else if (ch == '>')
 		{
-			sym = SYM_NEQ;     // <>
+			sym = SYM_NEQ; // <>
 			getch();
 		}
 		else
 		{
-			sym = SYM_LES;     // <
+			sym = SYM_LES; // <
 		}
 	}
+
+	// 基础扩展10
+	else if (ch == '/')
+	{
+		getch();
+		// 行内注释
+		if (ch == '/')
+		{
+			while (cc < ll)
+			{
+				getch();
+			}
+			getch();
+			getsym();
+		}
+		// 块注释
+		else if (ch == '*')
+		{
+			while (1)
+			{
+				getch();
+				if (ch == '*')
+				{
+					getch();
+					if (ch == '/')
+					{
+						getch();
+						break;
+					}
+				}
+			}
+			getsym();
+		}
+		else
+		{
+			sym = SYM_SLASH;
+		}
+	}
+
 	else
 	{ // other tokens
 		i = NSYM;
@@ -153,8 +192,8 @@ void getsym(void)
 	}
 } // getsym
 
-  //////////////////////////////////////////////////////////////////////
-  // generates (assembles) an instruction.
+//////////////////////////////////////////////////////////////////////
+// generates (assembles) an instruction.
 void gen(int x, int y, int z)
 {
 	if (cx > CXMAX)
@@ -167,12 +206,11 @@ void gen(int x, int y, int z)
 	code[cx++].a = z;
 } // gen
 
-  //////////////////////////////////////////////////////////////////////
-  // tests if error occurs and skips all symbols that do not belongs to s1 or s2.
+//////////////////////////////////////////////////////////////////////
+// tests if error occurs and skips all symbols that do not belongs to s1 or s2.
 void test(symset s1, symset s2, int n)
 {
 	symset s;
-
 	if (!inset(sym, s1))
 	{
 		error(n);
@@ -183,13 +221,13 @@ void test(symset s1, symset s2, int n)
 	}
 } // test
 
-  //////////////////////////////////////////////////////////////////////
-int dx;  // data allocation index
+//////////////////////////////////////////////////////////////////////
+int dx; // data allocation index
 
-		 // enter object(constant, variable or procedre) into table.
+// enter object(constant, variable or procedre) into table.
 void enter(int kind)
 {
-	mask* mk;
+	mask *mk;
 
 	tx++;
 	strcpy(table[tx].name, id);
@@ -205,29 +243,30 @@ void enter(int kind)
 		table[tx].value = num;
 		break;
 	case ID_VARIABLE:
-		mk = (mask*)&table[tx];
+		mk = (mask *)&table[tx];
 		mk->level = level;
 		mk->address = dx++;
 		break;
 	case ID_PROCEDURE:
-		mk = (mask*)&table[tx];
+		mk = (mask *)&table[tx];
 		mk->level = level;
 		break;
 	} // switch
 } // enter
 
-  //////////////////////////////////////////////////////////////////////
-  // locates identifier in symbol table.
-int position(char* id)
+//////////////////////////////////////////////////////////////////////
+// locates identifier in symbol table.
+int position(char *id)
 {
 	int i;
 	strcpy(table[0].name, id);
 	i = tx + 1;
-	while (strcmp(table[--i].name, id) != 0);
+	while (strcmp(table[--i].name, id) != 0)
+		;
 	return i;
 } // position
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void constdeclaration()
 {
 	if (sym == SYM_IDENTIFIER)
@@ -253,11 +292,12 @@ void constdeclaration()
 			error(3); // There must be an '=' to follow the identifier.
 		}
 	}
-	else	error(4);
+	else
+		error(4);
 	// There must be an identifier to follow 'const', 'var', or 'procedure'.
 } // constdeclaration
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void vardeclaration(void)
 {
 	if (sym == SYM_IDENTIFIER)
@@ -271,7 +311,7 @@ void vardeclaration(void)
 	}
 } // vardeclaration
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void listcode(int from, int to)
 {
 	int i;
@@ -284,7 +324,7 @@ void listcode(int from, int to)
 	printf("\n");
 } // listcode
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void factor(symset fsys)
 {
 	void expression(symset fsys);
@@ -293,10 +333,11 @@ void factor(symset fsys)
 
 	test(facbegsys, fsys, 24); // The symbol can not be as the beginning of an expression.
 
-	while (inset(sym, facbegsys))
+	if (inset(sym, facbegsys))
 	{
 		if (sym == SYM_IDENTIFIER)
 		{
+			co = 0;
 			if ((i = position(id)) == 0)
 			{
 				error(11); // Undeclared identifier.
@@ -305,12 +346,12 @@ void factor(symset fsys)
 			{
 				switch (table[i].kind)
 				{
-					mask* mk;
+					mask *mk;
 				case ID_CONSTANT:
 					gen(LIT, 0, table[i].value);
 					break;
 				case ID_VARIABLE:
-					mk = (mask*)&table[i];
+					mk = (mask *)&table[i];
 					gen(LOD, level - mk->level, mk->address);
 					break;
 				case ID_PROCEDURE:
@@ -327,7 +368,14 @@ void factor(symset fsys)
 				error(25); // The number is too great.
 				num = 0;
 			}
-			gen(LIT, 0, num);
+			if (co)
+			{
+				cnum = num;
+			}
+			else
+			{
+				gen(LIT, 0, num);
+			}
 			getsym();
 		}
 		else if (sym == SYM_LPAREN)
@@ -348,14 +396,21 @@ void factor(symset fsys)
 		else if (sym == SYM_MINUS) // UMINUS,  Expr -> '-' Expr
 		{
 			getsym();
-			expression(fsys);
-			gen(OPR, 0, OPR_NEG);
+			factor(fsys);
+			if (co)
+			{
+				cnum = -cnum;
+			}
+			else
+			{
+				gen(OPR, 0, OPR_NEG);
+			}
 		}
 		test(fsys, createset(SYM_LPAREN, SYM_NULL), 23);
 	} // while
 } // factor
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void term(symset fsys)
 {
 	int mulop;
@@ -363,24 +418,44 @@ void term(symset fsys)
 
 	set = uniteset(fsys, createset(SYM_TIMES, SYM_SLASH, SYM_NULL));
 	factor(set);
+
+	int left_num = cnum;
+	int left_co = co;
+
 	while (sym == SYM_TIMES || sym == SYM_SLASH)
 	{
+		left_num = cnum;
+
 		mulop = sym;
 		getsym();
 		factor(set);
-		if (mulop == SYM_TIMES)
+		if (co && left_co)
 		{
-			gen(OPR, 0, OPR_MUL);
+			if (mulop == SYM_TIMES)
+			{
+				cnum *= left_num;
+			}
+			else
+			{
+				cnum = left_num / cnum;
+			}
 		}
 		else
 		{
-			gen(OPR, 0, OPR_DIV);
+			if (mulop == SYM_TIMES)
+			{
+				gen(OPR, 0, OPR_MUL);
+			}
+			else
+			{
+				gen(OPR, 0, OPR_DIV);
+			}
 		}
 	} // while
 	destroyset(set);
 } // term
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void expression(symset fsys)
 {
 	int addop;
@@ -388,26 +463,53 @@ void expression(symset fsys)
 
 	set = uniteset(fsys, createset(SYM_PLUS, SYM_MINUS, SYM_NULL));
 
+	co = 1;
+
 	term(set);
+
+	int left_num, left_co;
+	left_co = co;
+
 	while (sym == SYM_PLUS || sym == SYM_MINUS)
 	{
+		left_num = cnum;
+
 		addop = sym;
 		getsym();
 		term(set);
-		if (addop == SYM_PLUS)
+		if (co && left_co)
 		{
-			gen(OPR, 0, OPR_ADD);
+			if (addop == SYM_PLUS)
+			{
+				cnum += left_num;
+			}
+			else
+			{
+				cnum = left_num - cnum;
+			}
 		}
 		else
 		{
-			gen(OPR, 0, OPR_MIN);
+			if (addop == SYM_PLUS)
+			{
+				gen(OPR, 0, OPR_ADD);
+			}
+			else
+			{
+				gen(OPR, 0, OPR_MIN);
+			}
 		}
 	} // while
+
+	if (co && left_co)
+	{
+		gen(LIT, 0, cnum);
+	}
 
 	destroyset(set);
 } // expression
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void condition(symset fsys)
 {
 	int relop;
@@ -417,7 +519,7 @@ void condition(symset fsys)
 	{
 		getsym();
 		expression(fsys);
-		gen(OPR, 0, 6);
+		gen(OPR, 0, OPR_ODD);
 	}
 	else
 	{
@@ -458,7 +560,7 @@ void condition(symset fsys)
 	} // else
 } // condition
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void statement(symset fsys)
 {
 	int i, cx1, cx2;
@@ -466,7 +568,7 @@ void statement(symset fsys)
 
 	if (sym == SYM_IDENTIFIER)
 	{ // variable assignment
-		mask* mk;
+		mask *mk;
 		if (!(i = position(id)))
 		{
 			error(11); // Undeclared identifier.
@@ -486,7 +588,7 @@ void statement(symset fsys)
 			error(13); // ':=' expected.
 		}
 		expression(fsys);
-		mk = (mask*)&table[i];
+		mk = (mask *)&table[i];
 		if (i)
 		{
 			gen(STO, level - mk->level, mk->address);
@@ -507,13 +609,13 @@ void statement(symset fsys)
 			}
 			else if (table[i].kind == ID_PROCEDURE)
 			{
-				mask* mk;
-				mk = (mask*)&table[i];
+				mask *mk;
+				mk = (mask *)&table[i];
 				gen(CAL, level - mk->level, mk->address);
 			}
 			else
 			{
-				error(15); // A constant or variable can not be called. 
+				error(15); // A constant or variable can not be called.
 			}
 			getsym();
 		}
@@ -587,25 +689,88 @@ void statement(symset fsys)
 		{
 			error(18); // 'do' expected.
 		}
-		statement(fsys);
+		set1 = createset(SYM_BREAK, SYM_CONTINUE);
+		set = uniteset(set1, fsys);
+		cxs1[++cx1top] = cx1;
+		cxs2[++cx2top][0] = 0;
+		statement(set);
+		destroyset(set1);
+		destroyset(set);
 		gen(JMP, 0, cx1);
 		code[cx2].a = cx;
+		while (cxs2[cx2top][0] >= 0)
+			code[cxs2[cx2top][cxs2[cx2top][0]--]].a = cx;
+		cx1top--;
+		cx2top--;
 	}
+	
+	////////////////////////////////////
+
+	// 基础扩展5
+
+	else if (sym == SYM_WRITE)
+	{
+		getsym();
+		if (sym == SYM_IDENTIFIER)
+		{
+			mask *mk;
+			if (!(i = position(id)))
+			{
+				error(11); // Undeclared identifier.
+			}
+			else if (table[i].kind == ID_PROCEDURE)
+			{
+				error(12); // Illegal assignment.
+				i = 0;
+			}
+			mk = (mask *)&table[i];
+			if (i)
+			{
+				gen(PRT, level - mk->level, mk->address);
+			}
+			getsym();
+		}
+		else
+		{
+			error(26); // identifier expected.
+		}
+	}
+
+	////////////////////////////////////
+
+	// 基础扩展4
+
+	// 提前检测语法合规性确保break与continue仅出现在while语句内
+	test(fsys, phi, 19);
+	if (sym == SYM_BREAK)
+	{
+		cxs2[cx2top][++cxs2[cx2top][0]] = cx;
+		gen(JMP, 0, 0);
+		getsym();
+	}
+	else if (sym == SYM_CONTINUE)
+	{
+		gen(JMP, 0, cxs1[cx1top]);
+		getsym();
+	}
+
+	////////////////////////////////////
+
 	test(fsys, phi, 19);
 } // statement
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 void block(symset fsys)
 {
 	int cx0; // initial code index
-	mask* mk;
+	mask *mk;
 	int block_dx;
 	int savedTx;
 	symset set1, set;
 
 	dx = 3;
 	block_dx = dx;
-	mk = (mask*)&table[tx];
+	mk = (mask *)&table[tx];
 	mk->address = cx;
 	gen(JMP, 0, 0);
 	if (level > MAXLEVEL)
@@ -657,7 +822,7 @@ void block(symset fsys)
 				}
 			} while (sym == SYM_IDENTIFIER);
 		} // if
-		block_dx = dx; //save dx before handling procedure call!
+		block_dx = dx; // save dx before handling procedure call!
 		while (sym == SYM_PROCEDURE)
 		{ // procedure declarations
 			getsym();
@@ -670,7 +835,6 @@ void block(symset fsys)
 			{
 				error(4); // There must be an identifier to follow 'const', 'var', or 'procedure'.
 			}
-
 
 			if (sym == SYM_SEMICOLON)
 			{
@@ -705,7 +869,7 @@ void block(symset fsys)
 				error(5); // Missing ',' or ';'.
 			}
 		} // while
-		dx = block_dx; //restore dx after handling procedure call!
+		dx = block_dx; // restore dx after handling procedure call!
 		set1 = createset(SYM_IDENTIFIER, SYM_NULL);
 		set = uniteset(statbegsys, set1);
 		test(set, declbegsys, 7);
@@ -723,11 +887,11 @@ void block(symset fsys)
 	destroyset(set1);
 	destroyset(set);
 	gen(OPR, 0, OPR_RET); // return
-	test(fsys, phi, 8); // test for error: Follow the statement is an incorrect symbol.
+	test(fsys, phi, 8);	  // test for error: Follow the statement is an incorrect symbol.
 	listcode(cx0, cx);
 } // block
 
-  //////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 int base(int stack[], int currentLevel, int levelDiff)
 {
 	int b = currentLevel;
@@ -737,14 +901,14 @@ int base(int stack[], int currentLevel, int levelDiff)
 	return b;
 } // base
 
-  //////////////////////////////////////////////////////////////////////
-  // interprets and executes codes.
+//////////////////////////////////////////////////////////////////////
+// interprets and executes codes.
 void interpret()
 {
-	int pc;        // program counter
+	int pc; // program counter
 	int stack[STACKSIZE];
-	int top;       // top of stack
-	int b;         // program, base, and top-stack register
+	int top;	   // top of stack
+	int b;		   // program, base, and top-stack register
 	instruction i; // instruction register
 
 	printf("Begin executing PL/0 program.\n");
@@ -804,6 +968,7 @@ void interpret()
 			case OPR_NEQ:
 				top--;
 				stack[top] = stack[top] != stack[top + 1];
+				break;
 			case OPR_LES:
 				top--;
 				stack[top] = stack[top] < stack[top + 1];
@@ -811,6 +976,7 @@ void interpret()
 			case OPR_GEQ:
 				top--;
 				stack[top] = stack[top] >= stack[top + 1];
+				break;
 			case OPR_GTR:
 				top--;
 				stack[top] = stack[top] > stack[top + 1];
@@ -825,7 +991,7 @@ void interpret()
 			break;
 		case STO:
 			stack[base(stack, b, i.l) + i.a] = stack[top];
-			printf("%d\n", stack[top]);
+			// printf("%d\n", stack[top]);
 			top--;
 			break;
 		case CAL:
@@ -847,22 +1013,29 @@ void interpret()
 				pc = i.a;
 			top--;
 			break;
+
+		// 基础扩展5
+		case PRT:
+			printf("%d\n", stack[base(stack, b, i.l) + i.a]);
+			break;
+		
 		} // switch
 	} while (pc);
 
 	printf("End executing PL/0 program.\n");
 } // interpret
 
-  //////////////////////////////////////////////////////////////////////
-void main()
+//////////////////////////////////////////////////////////////////////
+int main()
 {
-	FILE* hbin;
+	FILE *hbin;
 	char s[80];
 	int i;
 	symset set, set1, set2;
 
 	printf("Please input source file name: "); // get file name to be compiled
 	scanf("%s", s);
+	printf("\n");
 	if ((infile = fopen(s, "r")) == NULL)
 	{
 		printf("File %s can't be opened.\n", s);
@@ -911,7 +1084,9 @@ void main()
 		printf("There are %d error(s) in PL/0 program.\n", err);
 	listcode(0, cx);
 	system("pause");
+
+	return 0;
 } // main
 
-  //////////////////////////////////////////////////////////////////////
-  // eof pl0.c
+//////////////////////////////////////////////////////////////////////
+// eof pl0.c
