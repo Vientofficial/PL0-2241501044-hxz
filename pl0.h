@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-#define NRW        11     // number of reserved words
+// #define NRW        11     // number of reserved words
+#define NRW        14     // number of reserved words
 #define TXMAX      500    // length of identifier table
 #define MAXNUMLEN  14     // maximum number of digits in numbers
 #define NSYM       10     // maximum number of symbols in array ssym and csym
@@ -45,7 +46,13 @@ enum symtype
 	SYM_CALL,
 	SYM_CONST,
 	SYM_VAR,
-	SYM_PROCEDURE
+	SYM_PROCEDURE,
+
+	// 基础扩展4
+	SYM_BREAK,
+	SYM_CONTINUE,
+	// 基础扩展5
+	SYM_WRITE
 };
 
 enum idtype
@@ -55,7 +62,8 @@ enum idtype
 
 enum opcode
 {
-	LIT, OPR, LOD, STO, CAL, INT, JMP, JPC
+	LIT, OPR, LOD, STO, CAL, INT, JMP, JPC,
+	PRT
 };
 
 enum oprcode
@@ -103,7 +111,9 @@ char* err_msg[] =
 /* 23 */    "The symbol can not be followed by a factor.",
 /* 24 */    "The symbol can not be as the beginning of an expression.",
 /* 25 */    "The number is too great.",
-/* 26 */    "",
+
+/* 26 */    "identifier expected.",
+
 /* 27 */    "",
 /* 28 */    "",
 /* 29 */    "",
@@ -125,6 +135,32 @@ int  cx;         // index of current instruction to be generated.
 int  level = 0;
 int  tx = 0;
 
+////////////////////////////////////
+
+// 基础扩展4
+
+// 循环判断地址栈
+int cxs1[CXMAX];
+int cx1top = -1;
+
+// 循环退出地址栈
+int cxs2[CXMAX][CXMAX + 1];
+int cx2top = -1;
+
+////////////////////////////////////
+
+// 基础扩展8
+
+// 表达式是否全为常量
+// const only
+int co = 0;
+
+// 常量缓存
+// cached number
+int cnum;
+
+////////////////////////////////////
+
 char line[80];
 
 instruction code[CXMAX];
@@ -133,13 +169,15 @@ char* word[NRW + 1] =
 {
 	"", /* place holder */
 	"begin", "call", "const", "do", "end","if",
-	"odd", "procedure", "then", "var", "while"
+	"odd", "procedure", "then", "var", "while",
+	"break", "continue", "write"
 };
 
 int wsym[NRW + 1] =
 {
 	SYM_NULL, SYM_BEGIN, SYM_CALL, SYM_CONST, SYM_DO, SYM_END,
-	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE
+	SYM_IF, SYM_ODD, SYM_PROCEDURE, SYM_THEN, SYM_VAR, SYM_WHILE,
+	SYM_BREAK, SYM_CONTINUE, SYM_WRITE
 };
 
 int ssym[NSYM + 1] =
@@ -153,10 +191,13 @@ char csym[NSYM + 1] =
 	' ', '+', '-', '*', '/', '(', ')', '=', ',', '.', ';'
 };
 
-#define MAXINS   8
+// #define MAXINS   8
+#define MAXINS   9
 char* mnemonic[MAXINS] =
 {
-	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC"
+	"LIT", "OPR", "LOD", "STO", "CAL", "INT", "JMP", "JPC",
+	// 基础扩展5
+	"PRT"
 };
 
 typedef struct
