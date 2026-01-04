@@ -1,0 +1,12 @@
+var j, i, k;
+procedure test;
+begin
+  j := 10 + 2;
+  i := j + 10;
+  k := i + j * 10;
+  write k;
+end;
+
+begin
+  call test
+end.
