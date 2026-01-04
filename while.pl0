@@ -1,0 +1,28 @@
+var i, j, k, l;
+procedure test;
+begin
+  i := 0;
+  j := 8;
+  k := 1;
+  l := 10;
+
+  while i < j do
+  begin
+    if k = 1 then
+      begin
+        while l > 0 do
+          begin
+            l := l - 1;
+            break;
+          end;
+        break;
+      end;
+    i := i + 1;
+    continue;
+  end;
+  
+end;
+
+begin
+  call test
+end.
